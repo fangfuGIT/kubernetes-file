@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: tomcat
+  name: tomcat
+  namespace: abcdocker-test
+spec:
+  selector:
+    matchLabels:
+      name: tomcat
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tomcat
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: tomcat
+        name: tomcat
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -server -d64 -XX:MetaspaceSize=256m
+        - name: MAX_HEAP
+          value: 512m
+        - name: MIN_HEAP
+          value: 512m
+        image: registry.cn-beijing.aliyuncs.com/abcdocker/tomcat:v2
+        imagePullPolicy: IfNotPresent
+        name: my-tomcat
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            memory: 1536Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-tomcat-svc
+  namespace: abcdocker-test
+  labels:
+    app: tomcat
+spec:
+  selector:
+    app: tomcat
+  type: NodePort
+  ports:
+  - name: web
+    port: 8080
+    #targetPort: 8080
+    nodePort: 30005
